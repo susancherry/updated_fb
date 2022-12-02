@@ -24,7 +24,6 @@ for year in range(2020,2023):
         data.loc[((data.NARRCODE_1==88) |(data.NARRCODE_2==88)  | (data.NARRCODE_3==88)  | (data.NARRCODE_4==88)),"forbear"]=1
         data.loc[((data.NARRCODE_1==49) |(data.NARRCODE_2==49)  | (data.NARRCODE_3==49)  | (data.NARRCODE_4==49)),"forbear"]=1
         data.loc[data.PAYMENT_FREQUENCY=="D","forbear"]=1
-        data.loc[data.ACTUAL_PAYMENT_AMOUNT>=data.BALANCE,"forbear"]=np.nan
         data["delin"]=0
         data.loc[data.STATUS_CATEGORY>=2,"delin"]=1
         data.loc[data.ECOA!="I","delin"]=data.loc[data.ECOA!="I","delin"]*0.5
@@ -42,6 +41,8 @@ for year in range(2020,2023):
         data.loc[data.PRODUCT_CATEGORY=="AB2","categories"]="Auto"
         #FM
         data.loc[data.PRODUCT_CATEGORY=="FM","categories"]="FM"
+        data.loc[data.ACTUAL_PAYMENT_AMOUNT>=data.BALANCE,"forbear"]=np.nan
+        data.loc[data.ACTUAL_PAYMENT_AMOUNT>=data.BALANCE,"delin"]=np.nan
         data=pd.DataFrame(data.groupby(["ARCHIVE_DATE","categories"])[["forbear","delin"]].mean()).reset_index()
         if ((year ==2020) &( m==1)):
             data.to_csv("updated_fm.csv",index=False,header=True,mode='w')
