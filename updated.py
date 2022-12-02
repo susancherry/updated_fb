@@ -9,7 +9,7 @@ for year in range(2020,2023):
         file_name ="/disk/homedirs/nber/sc4331/equifax_scratch/equifax/equifax_aws/"+str(year)
         file_name =file_name+month
         file_name=file_name+".csv.gz"
-        cols=['CONSUMER_ID', 'TRADE_ID', 'ECOA','ACTIVITY_DESIGNATOR','PRODUCT_CATEGORY','PORTFOLIO_TYPE','PIM_SCORE','CONSUMER_AGE', 'TERMS','STATUS_CATEGORY', 'BALANCE', 'HIGH_CREDIT', 'NARRCODE_1', 'NARRCODE_2', 'NARRCODE_3', 'NARRCODE_4','SCHEDULED_PAYMENT_AMOUNT','ACTUAL_PAYMENT_AMOUNT']
+        cols=['CONSUMER_ID', 'TRADE_ID','PAYMENT_FREQUENCY', 'ECOA','ACTIVITY_DESIGNATOR','PRODUCT_CATEGORY','PORTFOLIO_TYPE','PIM_SCORE','CONSUMER_AGE', 'TERMS','STATUS_CATEGORY', 'BALANCE', 'HIGH_CREDIT', 'NARRCODE_1', 'NARRCODE_2', 'NARRCODE_3', 'NARRCODE_4','SCHEDULED_PAYMENT_AMOUNT','ACTUAL_PAYMENT_AMOUNT']
         data = pd.read_csv(file_name, usecols=cols)
         data=data.loc[pd.isnull(data.ACTIVITY_DESIGNATOR)]
         data=data.loc[data.STATUS_CATEGORY!=0]
