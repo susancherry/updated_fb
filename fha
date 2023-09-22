@@ -1,0 +1,47 @@
+cd /disk/homedirs/nber/cre2114/equifax_scratch/equifax/sc4331/new_forbearance
+python3 
+import pandas as pd 
+cols = ['CONSUMER_ID','ACCOUNT_TYPE', 'ARCHIVE_DATE', 'NARRCODE_1', 'NARRCODE_2', 'NARRCODE_3', 'NARRCODE_4','forbear','BALANCE', 'ORIGINATION_INDUSTRY_CODE', 'INDUSTRY_CODE']
+data = pd.read_csv("/disk/homedirs/nber/cre2114/equifax_scratch/equifax/sc4331/new_forbearance/updated_mort.csv", usecols=cols)
+
+data["gse"]=0
+data.loc[data.NARRCODE_1==218,"gse"]=1
+data.loc[data.NARRCODE_2==218,"gse"]=1
+data.loc[data.NARRCODE_3==218,"gse"]=1
+data.loc[data.NARRCODE_4==218,"gse"]=1
+data.loc[data.NARRCODE_1==208,"gse"]=1
+data.loc[data.NARRCODE_2==208,"gse"]=1
+data.loc[data.NARRCODE_3==208,"gse"]=1
+data.loc[data.NARRCODE_4==208,"gse"]=1
+
+data["fha"]=0
+data.loc[data.NARRCODE_1==151,"fha"]=1
+data.loc[data.NARRCODE_2==151,"fha"]=1
+data.loc[data.NARRCODE_3==151,"fha"]=1
+data.loc[data.NARRCODE_4==151,"fha"]=1
+
+data.loc[data.ACCOUNT_TYPE==19,"fha"]=1
+data.loc[data.ACCOUNT_TYPE==19,"fha"]=1
+data.loc[data.ACCOUNT_TYPE==19,"fha"]=1
+data.loc[data.ACCOUNT_TYPE==19,"fha"]=1
+
+data["fha"].mean()
+
+import numpy as np
+data["bank"]=np.nan
+data.loc[data.ORIGINATION_INDUSTRY_CODE=="BB","bank"]=1
+data.loc[data.ORIGINATION_INDUSTRY_CODE=="FC","bank"]=1
+data.loc[data.ORIGINATION_INDUSTRY_CODE=="FM","bank"]=0
+data.loc[data.ORIGINATION_INDUSTRY_CODE=="FR","bank"]=0
+
+
+data1.groupby("INDUSTRY_CODE")["CONSUMER_ID"].count()
+data1=data.loc[data.gse==1]
+data1.loc[(data1.bank==1)&(data1.forbear==1)].groupby('ARCHIVE_DATE')["BALANCE"].sum()/data1.loc[(data1.bank==1)].groupby('ARCHIVE_DATE')["BALANCE"].sum()
+
+data1.loc[(data1.bank==0)&(data1.forbear==1)].groupby('ARCHIVE_DATE')["BALANCE"].sum()/data1.loc[(data1.bank==0)].groupby('ARCHIVE_DATE')["BALANCE"].sum()
+
+
+
+
+data.grouby()
