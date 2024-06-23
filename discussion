@@ -83,3 +83,90 @@ reg forbearance i.post##i.sbank##c.frac_ui fico current_upb  origin_upb if year 
 
 
 
+
+
+python3
+import pandas as pd 
+ui = pd.read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/UI%20Claims%20-%20County%20-%20Weekly.csv")
+ui=ui.loc[ui.year==2020]
+ui=ui.loc[ui.month>2]
+ui=ui[["initclaims_rate_regular","year","month","countyfips"]]
+ui["initclaims_rate_regular"]=pd.to_numeric(ui["initclaims_rate_regular"],errors='coerce')
+ui=ui.groupby(["year","month","countyfips"])["initclaims_rate_regular"].mean()
+ui=pd.DataFrame(ui).reset_index()
+
+county_to_zip=pd.read_csv("/disk/homedirs/nber/sc4331/equifax_scratch/sc4331/corona_paper/regional/ZIP_COUNTY_062020.csv")
+ui=ui.merge(county_to_zip,left_on="countyfips",right_on="COUNTY")
+ui["frac_ui"]=ui["initclaims_rate_regular"]*ui["RES_RATIO"]
+ui.groupby(["ZIP","year"])["frac_ui"].sum()
+
+ui=pd.DataFrame(ui.groupby(["ZIP","year"])["frac_ui"].sum()).reset_index()
+
+ui.to_stata("ui2.dta")
+
+
+
+####
+clear 
+use /disk/homedirs/nber/sc4331/equifax_scratch/sc4331/corona_paper/data_for_regs_eqf_forbear1.dta
+gen sbank = 0
+replace sbank = 1 if Type =="Sbank"
+
+drop post
+gen post =0 
+replace post = 1 if date>722
+
+drop high
+gen high=0
+replace high = 1 if dti>=45
+reg forbearance i.post##i.sbank  i.date##c.ln_upb i.date##c.fico if date<728 & low==1
+
+reg forbearance i.post##i.sbank##i.high  i.date##c.ln_upb i.date##c.fico if date<728 
+
+
+
+rename zip _3dig
+merge m:1 _3dig using ui
+
+sum frac_ui , d
+
+
+
+gen lowui=0
+replace lowui=1 if frac_ui <= 6.514849 
+gen highui=0
+replace highui=1 if frac_ui>= 12.20143  & frac_ui!=.
+
+sum dti
+replace dti=dti/r(sd)
+
+sum frac_ui
+replace frac_ui=frac_ui/r(sd)
+
+
+eststo clear 
+eststo: reg forbearance i.post##i.sbank i.date##c.ln_upb i.date##c.fico if date<728  
+estadd ysumm
+eststo: reg forbearance i.post##i.sbank##c.dti i.date##c.ln_upb i.date##c.fico if date<728  
+estadd ysumm
+eststo: reg forbearance i.post##i.sbank##c.frac_ui i.date##c.ln_upb i.date##c.fico if date<728  
+estadd ysumm
+eststo: reg forbearance i.post##i.sbank##i.highui i.date##c.ln_upb i.date##c.fico if date<728   & high==1
+estadd ysumm
+eststo: reg forbearance i.post##i.sbank##i.highui i.date##c.ln_upb i.date##c.fico if date<728   & high==0
+estadd ysumm
+esttab using /disk/homedirs/nber/cre2114/equifax_scratch/equifax/sc4331/fintech2/default.csv, label se ar2(4) starlevels( * 0.10 ** 0.05 *** 0.010)   replace
+esttab using /disk/homedirs/nber/cre2114/equifax_scratch/equifax/sc4331/fintech2/default2.csv, label se stats(ymean)  replace
+
+
+keep consumer_id total_past_due_amount number_accounts_past_due sbank vantage_score_3
+rename total_past_due_amount total_past_due_amount_x
+rename number_accounts_past_due number_accounts_past_due_x
+rename vantage_score_3 vantage_score_3_x
+
+save consumers, replace
+
+
+import delimited /disk/homedirs/nber/sc4331/equifax_scratch/data/ORIG/nber_onefile_cat_analytic_dataset_202009.csv
+
+
