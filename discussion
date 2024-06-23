@@ -144,16 +144,15 @@ sum frac_ui
 replace frac_ui=frac_ui/r(sd)
 
 
+
 eststo clear 
 eststo: reg forbearance i.post##i.sbank i.date##c.ln_upb i.date##c.fico if date<728  
 estadd ysumm
-eststo: reg forbearance i.post##i.sbank##c.dti i.date##c.ln_upb i.date##c.fico if date<728  
+eststo: reg forbearance i.post##i.sbank##i.high i.date##c.ln_upb i.date##c.fico if date<728  
 estadd ysumm
-eststo: reg forbearance i.post##i.sbank##c.frac_ui i.date##c.ln_upb i.date##c.fico if date<728  
+eststo: reg forbearance i.post##i.sbank##i.high i.date##c.ln_upb i.date##c.fico if date<728   & highui==1
 estadd ysumm
-eststo: reg forbearance i.post##i.sbank##i.highui i.date##c.ln_upb i.date##c.fico if date<728   & high==1
-estadd ysumm
-eststo: reg forbearance i.post##i.sbank##i.highui i.date##c.ln_upb i.date##c.fico if date<728   & high==0
+eststo: reg forbearance i.post##i.sbank##i.high i.date##c.ln_upb i.date##c.fico if date<728   & lowui==1
 estadd ysumm
 esttab using /disk/homedirs/nber/cre2114/equifax_scratch/equifax/sc4331/fintech2/default.csv, label se ar2(4) starlevels( * 0.10 ** 0.05 *** 0.010)   replace
 esttab using /disk/homedirs/nber/cre2114/equifax_scratch/equifax/sc4331/fintech2/default2.csv, label se stats(ymean)  replace
