@@ -1,0 +1,85 @@
+use /disk/homedirs/nber/sc4331/equifax_scratch/sc4331/bank_sbank/fannie_0020_sban.dta
+append using /disk/homedirs/nber/sc4331/equifax_scratch/sc4331/bank_sbank/fannie_0020_bank.dta
+gen low = 0
+replace low = 1 if dti<=27
+gen high = 0
+replace high = 1 if dti>42
+gen sbank = 0
+replace sbank = 1 if Type =="Sbank"
+
+reg forbearance ib722.date##i.type2 fico current_upb  origin_upb if year ==2020 & low==1 & month<=9
+reg forbearance ib722.date##i.type2 fico current_upb  origin_upb if year ==2020 & high==1 & month<=9
+
+
+python3
+import pandas as pd 
+ui = pd.read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/UI%20Claims%20-%20County%20-%20Weekly.csv")
+ui=ui.loc[ui.year==2020]
+ui=ui.loc[ui.month>2]
+ui=ui[["initclaims_rate_regular","year","month","countyfips"]]
+ui["initclaims_rate_regular"]=pd.to_numeric(ui["initclaims_rate_regular"],errors='coerce')
+ui=ui.groupby(["year","month","countyfips"])["initclaims_rate_regular"].mean()
+ui=pd.DataFrame(ui).reset_index()
+
+county_to_zip=pd.read_csv("/disk/homedirs/nber/sc4331/equifax_scratch/sc4331/corona_paper/regional/ZIP_COUNTY_062020.csv")
+ui=ui.merge(county_to_zip,left_on="countyfips",right_on="COUNTY")
+ui["frac_ui"]=ui["initclaims_rate_regular"]*ui["RES_RATIO"]
+ui.groupby(["ZIP","year"])["frac_ui"].sum()
+
+ui=pd.DataFrame(ui.groupby(["ZIP","year"])["frac_ui"].sum()).reset_index()
+ui["ZIP"]= ui["ZIP"].astype(str).str.zfill(5)
+ui["3dig"]=ui["ZIP"].astype(str).str[0:3].astype(int)
+
+ui=pd.DataFrame(ui.groupby(["3dig","year"])["frac_ui"].mean()).reset_index()
+ui.to_stata("ui.dta")
+
+
+clear 
+sata
+
+use /disk/homedirs/nber/sc4331/equifax_scratch/sc4331/bank_sbank/fannie_0020_sban.dta
+append using /disk/homedirs/nber/sc4331/equifax_scratch/sc4331/bank_sbank/fannie_0020_bank.dta
+gen low = 0
+replace low = 1 if dti<=27
+gen high = 0
+replace high = 1 if dti>42
+gen sbank = 0
+replace sbank = 1 if Type =="Sbank"
+
+rename zip _3dig
+merge m:1 _3dig using ui
+
+sum frac_ui , d
+
+
+
+gen lowui=0
+replace lowui=1 if frac_ui <= 6.514849 
+gen highui=0
+replace highui=1 if frac_ui>= 12.20143  & frac_ui!=.
+
+gen sbank = 0
+replace sbank =1 if Type =="sbank"
+
+gen post = 0
+replace post = 1 if date>=722
+reg forbearance i.post##i.sbank fico current_upb  origin_upb if year ==2020 & low==1 & month<=9
+reg forbearance i.post##i.sbank fico current_upb  origin_upb if year ==2020 & high==1 & month<=9
+
+drop highui
+gen highui=0  if frac_ui <=   6.514849  
+replace highui=1 if frac_ui>  8.688019   & frac_ui!=.
+replace highui=.  if frac_ui >=  12.20143
+replace highui=.  if frac_ui <    2.477866
+
+
+reg forbearance i.post##i.sbank##i.highui fico current_upb  origin_upb if year ==2020 & low==1 & month<=9 
+
+reg forbearance i.post##i.sbank##c.frac_ui fico current_upb  origin_upb if year ==2020 & high==1 & month<=9 
+
+
+##
+
+
+
+
