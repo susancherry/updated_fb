@@ -166,6 +166,64 @@ rename vantage_score_3 vantage_score_3_x
 save consumers, replace
 
 
-import delimited /disk/homedirs/nber/sc4331/equifax_scratch/data/ORIG/nber_onefile_cat_analytic_dataset_202009.csv
+import delimited /disk/homedirs/nber/sc4331/equifax_scratch/data/ORIG/nber_onefile_cat_analytic_dataset_202005.csv.gz
+
+
+
+
+
+
+
+#################
+python3
+import pandas as pd 
+feb = pd.read_csv("/disk/homedirs/nber/sc4331/equifax_scratch/data/ORIG/nber_onefile_cat_analytic_dataset_202002.csv.gz")
+april = pd.read_csv("/disk/homedirs/nber/sc4331/equifax_scratch/data/ORIG/nber_onefile_cat_analytic_dataset_202005.csv.gz")
+feb=feb.loc[feb.product_category=="FM"]
+feb.loc[feb.balance>0]
+april=april.loc[april.product_category=="FM"]
+feb["delin"]=0
+feb.loc[feb.status_category>1,"delin"]=1
+feb.loc[feb.status_category==7,"delin"]=0
+april["delin"]=0
+april.loc[april.balance>0]
+april.loc[april.status_category>1,"delin"]=1
+april.loc[april.status_category==7,"delin"]=0
+
+feb.delin.mean()
+april.delin.mean()
+
+feb.loc[feb.delin==1]["vantage_score_3"].mean()
+
+feb.loc[feb.delin==1]["pim_score"].mean()
+april.loc[april.delin==1]["pim_score"].mean()
+
+
+
+
+import delimited /disk/homedirs/nber/sc4331/equifax_scratch/sc4331/corona_paper/jumbo_diffindiff_v22.csv
+
+replace jumbo = 1 if ratio>1
+drop ineligible
+gen ineligible=0
+replace ineligible =1 if mandate ==0
+drop pandemic
+gen pandemic = 0
+replace pandem= 1 if year==2020 & month>3
+replace pandem= 1 if year==2021
+
+eststo clear 
+eststo: reg missed ineligible balance vantage  pim_score_x  if forbear ==1 & pandem==1, absorb(zip_code)
+estadd ysumm
+
+eststo:  reg pim_score_x ineligible balance i.year i.month   if forbear ==1 & pandem==1 & missed==1, absorb(zip_code)
+estadd ysumm
+
+eststo:  reg vantage_score_3 ineligible  balance i.year i.month  if forbear ==1 & pandem==1 & missed==1, absorb(zip_code)
+estadd ysumm
+esttab using /disk/homedirs/nber/cre2114/equifax_scratch/equifax/sc4331/fintech2/default.csv, label se ar2(4) starlevels( * 0.10 ** 0.05 *** 0.010)   replace
+esttab using /disk/homedirs/nber/cre2114/equifax_scratch/equifax/sc4331/fintech2/default2.csv, label se stats(ymean)  replace
+
+
 
 
